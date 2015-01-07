@@ -1,7 +1,10 @@
 import time
 
 
-class GUOIDGeneraator(object):
+class GUOIDGenerator(object):
+    """
+    https://github.com/charsyam/python-guoid
+    """
     LOGICAL_SHARD_BITS = 8
     LOGICAL_SHARD_MASK = (1 << LOGICAL_SHARD_BITS) - 1
 
@@ -11,6 +14,12 @@ class GUOIDGeneraator(object):
     SEQUENCE_SHIFT = LOGICAL_SHARD_BITS
     TIMESTAMP_SHIFT = LOGICAL_SHARD_BITS + SEQUENCE_BITS
 
+    instance = None
+
+    @classmethod
+    def create_instance(cls, base_timestamp):
+        cls.instance = cls(base_timestamp)
+
     def __init__(self, base_timestamp):
         self.base_timestamp = base_timestamp
         self.last_timestamp = 0
@@ -19,7 +28,7 @@ class GUOIDGeneraator(object):
     def gen_guoid(self, logical_shard_id):
         cur_timestamp = self._get_timestamp()
         if cur_timestamp < self.last_timestamp:
-            raise RuntimeError("Clock moved backwards")
+            raise RuntimeError("CLOCK_MOVED_BACKWARDS")
 
         if cur_timestamp == self.last_timestamp:
             self.sequence = (self.sequence + 1) & self.SEQUENCE_MASK
@@ -50,7 +59,7 @@ class GUOIDGeneraator(object):
         return cur_timestamp
 
 if __name__ == '__main__':
-    guoidGenerator = GUOIDGeneraator(1420623826669)
+    guoidGenerator = GUOIDGenerator(1420623826669)
     print '%x' % guoidGenerator.gen_guoid(0)
     time.sleep(1)
     print '%x' % guoidGenerator.gen_guoid(0)

@@ -6,6 +6,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from random import randrange
 
+from guoid import GUOIDGenerator
+
 Base = declarative_base()
 MasterSession = scoped_session(sessionmaker(class_=ShardedSession))
 SlaveSession = scoped_session(sessionmaker(class_=ShardedSession))
@@ -20,14 +22,19 @@ class User(Base):
 
     items = relationship(lambda: Item, backref='owner')
 
-    def __init__(self, device, *args, **kwargs):
-        super(User, self).__init__(*args, **kwargs)
-
-        self.id = (device.id << 8) | randrange(0, 255)
-
     def __repr__(self):
         return '<User(id={0}, name={1}, money={2})>'.format(
             self.id, self.name, self.money)
+
+    @classmethod
+    def create_user_with_device(cls, device, *args, **kwargs):
+        new_user = cls(*args, **kwargs)
+        new_user.id = (device.id << 8) | randrange(0, 255)
+        return new_user
+
+    @property
+    def logical_shard_id(self):
+        return self.id & 0xff
 
 
 class Item(Base):
@@ -38,8 +45,10 @@ class Item(Base):
 
     user_id = Column(Integer, ForeignKey(User.id))
 
-    def __init__(self, *args, **kwargs):
-        super(Item, self).__init__(*args, **kwargs)
-
-        self.id = (device.id << 8) | randrange(0, 255)
+    @classmethod
+    def create_item_with_owner(cls, owner, *args, **kwargs):
+        new_item = cls(*args, **kwargs)
+        new_item.owner = owner
+        new_item.id = GUOIDGenerator.instance.gen_guoid(owner.logical_shard_id)
+        return new_item
 

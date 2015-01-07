@@ -29,8 +29,6 @@ class DBShardManager(object):
             id_chooser=self._choose_id)
 
     def _choose_id(self, query, instance_ids):
-        print('choose_ids:{0} query:{1}'.format(instance_ids, query))
-
         shard_keys = set()
         for instance_id in instance_ids:
             shard_keys.add(self._convert_shard_key(instance_id))
@@ -38,7 +36,6 @@ class DBShardManager(object):
         return shard_keys
 
     def _choose_shard(self, mapper, instance, clause=None):
-        print('choose_shard:{0}'.format(instance))
         if isinstance(instance, self.main_cls):
             key_value = getattr(instance, self.primary_key_name)
             if key_value is None:
@@ -51,7 +48,6 @@ class DBShardManager(object):
         return self._convert_shard_key(key_value)
 
     def _choose_query(self, query):
-        print('choose_query:{0}'.format(query))
         shard_keys = set()
         for column, operator, value in self._get_query_comparisons(query):
             is_foregin_column = False

@@ -17,3 +17,8 @@ class Device(Base):
         return '<Device(id={0}, guid={1}, logical_shard_id={2})>'.format(
             self.id, self.guid, self.logical_shard_id)
 
+    @classmethod
+    def create_device(cls, *args, **kwargs):
+        return cls(*args, **kwargs)
+
+
